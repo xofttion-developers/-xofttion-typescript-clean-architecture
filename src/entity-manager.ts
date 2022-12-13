@@ -11,7 +11,7 @@ export interface EntityManager {
 
   select(entity: Entity): Optional<ModelORM>;
 
-  update(sync: EntitySync): void;
+  sync(sync: EntitySync): void;
 
   destroy(entity: Entity): void;
 
@@ -45,7 +45,7 @@ export class XofttionEntityManager implements EntityManager {
     return Optional.build(this._relations.get(entity.uuid));
   }
 
-  public update(sync: EntitySync): void {
+  public sync(sync: EntitySync): void {
     this._syncs.push(sync);
 
     this.relation(sync.entity, sync.model);

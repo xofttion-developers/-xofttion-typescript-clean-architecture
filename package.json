@@ -1,14 +1,13 @@
 {
   "name": "@xofttion/clean-architecture",
-  "version": "4.0.0",
+  "version": "4.0.1",
   "author": "Daniel Andrés Castillo Pedroza",
   "license": "MIT",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
   "module": "dist/xofttion-clean-architecture.esm.js",
   "files": [
-    "dist",
-    "src"
+    "dist"
   ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -16,7 +15,7 @@
     "launch": "ts-node index.ts"
   },
   "peerDependencies": {
-    "@xofttion/utils": "^4.0.0"
+    "@xofttion/utils": "^4.0.2"
   },
   "devDependencies": {
     "@types/jest": "^28.1.8",
