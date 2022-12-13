@@ -1,6 +1,6 @@
-# @xofttion/unit-of-work
+# @xofttion/clean-architecture
 
-Library to manage data state in a simple way.
+Library that contains basic classes to implement a clean architecture.
 
 <p>
   <b>Author:</b> Daniel Andrés Castillo Pedroza
