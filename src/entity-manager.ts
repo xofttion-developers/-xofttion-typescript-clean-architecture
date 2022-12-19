@@ -1,51 +1,43 @@
 import { Optional } from '@xofttion/utils';
-import { EntityDataSource } from './datasource';
+import { AbstractEntityDataSource } from './datasource';
 import { Entity } from './entity';
 import { ModelORM } from './model-orm';
-import { EntityLink, EntitySync } from './unit-of-work';
+import { AbstractEntityLink, AbstractEntitySync } from './unit-of-work';
 
-export interface EntityManager {
-  persist(link: EntityLink): void;
+export interface AbstractEntityManager {
+  persist(link: AbstractEntityLink): void;
+
+  sync(sync: AbstractEntitySync): void;
+
+  destroy(entity: Entity): void;
 
   relation(entity: Entity, model: ModelORM): void;
 
   select(entity: Entity): Optional<ModelORM>;
-
-  sync(sync: EntitySync): void;
-
-  destroy(entity: Entity): void;
 
   flush(): Promise<void>;
 
   dispose(): void;
 }
 
-export class XofttionEntityManager implements EntityManager {
+export class EntityManager implements AbstractEntityManager {
   private _relations: Map<string, ModelORM>;
 
-  private _links: EntityLink[] = [];
+  private _links: AbstractEntityLink[] = [];
 
-  private _syncs: EntitySync[] = [];
+  private _syncs: AbstractEntitySync[] = [];
 
   private _destroys: ModelORM[] = [];
 
-  constructor(private _entityDataSource: EntityDataSource) {
+  constructor(private _entityDataSource: AbstractEntityDataSource) {
     this._relations = new Map<string, ModelORM>();
   }
 
-  public persist(link: EntityLink): void {
+  public persist(link: AbstractEntityLink): void {
     this._links.push(link);
   }
 
-  public relation(entity: Entity, model: ModelORM): void {
-    this._relations.set(entity.uuid, model);
-  }
-
-  public select(entity: Entity): Optional<ModelORM> {
-    return Optional.build(this._relations.get(entity.uuid));
-  }
-
-  public sync(sync: EntitySync): void {
+  public sync(sync: AbstractEntitySync): void {
     this._syncs.push(sync);
 
     this.relation(sync.entity, sync.model);
@@ -57,6 +49,14 @@ export class XofttionEntityManager implements EntityManager {
     if (optional.isPresent()) {
       this._destroys.push(optional.get());
     }
+  }
+
+  public relation(entity: Entity, model: ModelORM): void {
+    this._relations.set(entity.uuid, model);
+  }
+
+  public select(entity: Entity): Optional<ModelORM> {
+    return Optional.build(this._relations.get(entity.uuid));
   }
 
   public async flush(): Promise<void> {
