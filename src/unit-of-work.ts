@@ -7,7 +7,7 @@ type EntityShot = { [key: string]: any };
 export abstract class EntityLink {
   constructor(public readonly entity: Entity) {}
 
-  abstract createModel(entityManager: EntityManager): ModelORM;
+  public abstract createModel(entityManager: EntityManager): ModelORM;
 }
 
 export abstract class EntitySync {
