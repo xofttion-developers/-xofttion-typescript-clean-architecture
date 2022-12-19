@@ -1,4 +1,4 @@
-export interface AbstractEntityDatabase {
+export interface EntityDatabase {
   connect(): Promise<void>;
 
   disconnect(full?: boolean): Promise<void>;

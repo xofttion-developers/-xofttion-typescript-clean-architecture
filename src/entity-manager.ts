@@ -1,43 +1,27 @@
 import { Optional } from '@xofttion/utils';
-import { AbstractEntityDataSource } from './datasource';
+import { EntityDataSource } from './datasource';
 import { Entity } from './entity';
 import { ModelORM } from './model-orm';
-import { AbstractEntityLink, AbstractEntitySync } from './unit-of-work';
+import { EntityLink, EntitySync } from './unit-of-work';
 
-export interface AbstractEntityManager {
-  persist(link: AbstractEntityLink): void;
-
-  sync(sync: AbstractEntitySync): void;
-
-  destroy(entity: Entity): void;
-
-  relation(entity: Entity, model: ModelORM): void;
-
-  select(entity: Entity): Optional<ModelORM>;
-
-  flush(): Promise<void>;
-
-  dispose(): void;
-}
-
-export class EntityManager implements AbstractEntityManager {
+export class EntityManager {
   private _relations: Map<string, ModelORM>;
 
-  private _links: AbstractEntityLink[] = [];
+  private _links: EntityLink[] = [];
 
-  private _syncs: AbstractEntitySync[] = [];
+  private _syncs: EntitySync[] = [];
 
   private _destroys: ModelORM[] = [];
 
-  constructor(private _entityDataSource: AbstractEntityDataSource) {
+  constructor(private _entityDataSource: EntityDataSource) {
     this._relations = new Map<string, ModelORM>();
   }
 
-  public persist(link: AbstractEntityLink): void {
+  public persist(link: EntityLink): void {
     this._links.push(link);
   }
 
-  public sync(sync: AbstractEntitySync): void {
+  public sync(sync: EntitySync): void {
     this._syncs.push(sync);
 
     this.relation(sync.entity, sync.model);

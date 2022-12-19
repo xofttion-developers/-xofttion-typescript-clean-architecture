@@ -1,6 +1,6 @@
 import { ModelORM } from './model-orm';
 
-export interface AbstractEntityDataSource {
+export interface EntityDataSource {
   insert(model: ModelORM): Promise<void>;
 
   update(model: ModelORM): Promise<void>;

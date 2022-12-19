@@ -1,29 +1,16 @@
-import { AbstractEntityManager } from './entity-manager';
+import { EntityManager } from './entity-manager';
 import { Entity } from './entity';
 import { ModelORM } from './model-orm';
 
 type EntityShot = { [key: string]: any };
 
-export interface AbstractEntityLink {
-  entity: Entity;
-
-  createModel(entityManager: AbstractEntityManager): ModelORM;
-}
-
-export abstract class EntityLink implements AbstractEntityLink {
+export abstract class EntityLink {
   constructor(public readonly entity: Entity) {}
 
-  abstract createModel(entityManager: AbstractEntityManager): ModelORM;
+  abstract createModel(entityManager: EntityManager): ModelORM;
 }
 
-export interface AbstractEntitySync {
-  entity: Entity;
-  model: ModelORM;
-
-  check(): boolean;
-}
-
-export abstract class EntitySync implements AbstractEntitySync {
+export abstract class EntitySync {
   private _initialShot: EntityShot;
 
   constructor(public readonly entity: Entity, public readonly model: ModelORM) {
