@@ -4,23 +4,7 @@ import { Entity } from './entity';
 import { ModelORM } from './model-orm';
 import { EntityLink, EntitySync } from './unit-of-work';
 
-export interface EntityManager {
-  persist(link: EntityLink): void;
-
-  relation(entity: Entity, model: ModelORM): void;
-
-  select(entity: Entity): Optional<ModelORM>;
-
-  sync(sync: EntitySync): void;
-
-  destroy(entity: Entity): void;
-
-  flush(): Promise<void>;
-
-  dispose(): void;
-}
-
-export class XofttionEntityManager implements EntityManager {
+export class EntityManager {
   private _relations: Map<string, ModelORM>;
 
   private _links: EntityLink[] = [];
@@ -37,14 +21,6 @@ export class XofttionEntityManager implements EntityManager {
     this._links.push(link);
   }
 
-  public relation(entity: Entity, model: ModelORM): void {
-    this._relations.set(entity.uuid, model);
-  }
-
-  public select(entity: Entity): Optional<ModelORM> {
-    return Optional.build(this._relations.get(entity.uuid));
-  }
-
   public sync(sync: EntitySync): void {
     this._syncs.push(sync);
 
@@ -57,6 +33,14 @@ export class XofttionEntityManager implements EntityManager {
     if (optional.isPresent()) {
       this._destroys.push(optional.get());
     }
+  }
+
+  public relation(entity: Entity, model: ModelORM): void {
+    this._relations.set(entity.uuid, model);
+  }
+
+  public select(entity: Entity): Optional<ModelORM> {
+    return Optional.build(this._relations.get(entity.uuid));
   }
 
   public async flush(): Promise<void> {
