@@ -7,8 +7,8 @@
     "forceConsistentCasingInFileNames": true,
     "importHelpers": true,
     "jsx": "react",
-    "lib": ["dom", "es2020"],
-    "module": "es2020",
+    "lib": ["DOM", "ES2020"],
+    "module": "CommonJS",
     "moduleResolution": "node",
     "noFallthroughCasesInSwitch": true,
     "noImplicitReturns": true,
@@ -19,13 +19,13 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "strict": true,
-    "target": "es2020",
+    "target": "ES2020",
     "typeRoots": ["node_modules/@types/**/*.d.ts"]
   },
   "include": ["src"],
   "ts-node": {
     "compilerOptions": {
-      "module": "es2020"
+      "module": "CommonJS"
     },
     "files": true
   }
