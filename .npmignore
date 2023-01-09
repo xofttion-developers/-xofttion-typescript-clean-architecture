@@ -9,3 +9,4 @@ test
 .gitignore
 .prettierrc
 .prettierrcignore
+package-lock.json
