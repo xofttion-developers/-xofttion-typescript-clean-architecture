@@ -71,10 +71,10 @@ export class EntityManager {
 
   private async _syncAll(): Promise<void> {
     for (const sync of this._syncs) {
-      const requiredSync = sync.check();
+      const dirty = sync.verify();
 
-      if (requiredSync) {
-        await this._entityDataSource.update(sync.model);
+      if (dirty) {
+        await this._entityDataSource.update(sync.model, dirty);
       }
     }
   }

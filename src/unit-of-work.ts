@@ -2,7 +2,7 @@ import { EntityManager } from './entity-manager';
 import { Entity } from './entity';
 import { ModelORM } from './model-orm';
 
-type EntityShot = { [key: string]: any };
+export type ModelDirty = { [key: string]: any };
 
 export abstract class EntityLink {
   constructor(public readonly entity: Entity) {}
@@ -11,44 +11,45 @@ export abstract class EntityLink {
 }
 
 export abstract class EntitySync {
-  private _initialShot: EntityShot;
+  private _firstStatus: ModelDirty;
 
   constructor(public readonly entity: Entity, public readonly model: ModelORM) {
-    this._initialShot = this._createShot(entity);
+    this._firstStatus = this._createStatus(model);
   }
 
   public abstract sync(): void;
 
-  public check(): boolean {
-    const isDirty = this._isDirty();
+  public verify(): ModelDirty | undefined {
+    this.sync();
 
-    if (isDirty) {
-      this.sync();
-    }
-
-    return isDirty;
+    return this._getDirty();
   }
 
-  private _createShot(entity: Entity): EntityShot {
-    const entityShot: { [key: string]: any } = {};
+  private _createStatus(model: ModelORM): ModelDirty {
+    const modelStatus: ModelDirty = {};
 
-    Object.keys(entity).forEach((key) => {
-      entityShot[key] = (entity as any)[key];
+    Object.keys(model).forEach((key) => {
+      modelStatus[key] = (model as any)[key];
     });
 
-    return entityShot;
+    return modelStatus;
   }
 
-  private _isDirty(): boolean {
-    const currentShot = this._createShot(this.entity);
+  private _getDirty(): ModelDirty | undefined {
+    const currentStatus = this._createStatus(this.model);
 
-    let isDirty = false;
+    const modelDirty: ModelDirty = {};
 
-    Object.keys(currentShot).forEach((key) => {
-      isDirty = isDirty || currentShot[key] !== this._initialShot[key];
+    let dirty = false;
+
+    Object.keys(currentStatus).forEach((key) => {
+      if (currentStatus[key] !== this._firstStatus[key]) {
+        dirty = true;
+        modelDirty[key] = currentStatus[key];
+      }
     });
 
-    return isDirty;
+    return dirty ? modelDirty : undefined;
   }
 }
 
