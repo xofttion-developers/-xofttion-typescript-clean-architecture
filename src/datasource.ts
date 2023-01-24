@@ -1,10 +1,10 @@
-import { ModelORM } from './model-orm';
+import { BaseModelORM } from './model-orm';
 import { ModelDirty } from './unit-of-work';
 
 export interface EntityDataSource {
-  insert(model: ModelORM): Promise<void>;
+  insert(model: BaseModelORM): Promise<void>;
 
-  update(model: ModelORM, dirty: ModelDirty): Promise<void>;
+  update(model: BaseModelORM, dirty: ModelDirty): Promise<void>;
 
-  delete(model: ModelORM): Promise<void>;
+  delete(model: BaseModelORM): Promise<void>;
 }
