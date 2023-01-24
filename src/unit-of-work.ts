@@ -1,19 +1,19 @@
 import { EntityManager } from './entity-manager';
 import { Entity } from './entity';
-import { ModelORM } from './model-orm';
+import { BaseModelORM } from './model-orm';
 
 export type ModelDirty = { [key: string]: any };
 
 export abstract class EntityLink {
   constructor(public readonly entity: Entity) {}
 
-  public abstract createModel(entityManager: EntityManager): ModelORM;
+  public abstract createModel(manager: EntityManager): BaseModelORM;
 }
 
 export abstract class EntitySync {
   private _firstStatus: ModelDirty;
 
-  constructor(public readonly entity: Entity, public readonly model: ModelORM) {
+  constructor(public readonly entity: Entity, public readonly model: BaseModelORM) {
     this._firstStatus = this._createStatus(model);
   }
 
@@ -22,10 +22,10 @@ export abstract class EntitySync {
   public verify(): ModelDirty | undefined {
     this.sync();
 
-    return this._getDirty();
+    return this.getDirty();
   }
 
-  private _createStatus(model: ModelORM): ModelDirty {
+  private _createStatus(model: BaseModelORM): ModelDirty {
     const modelStatus: ModelDirty = {};
 
     Object.keys(model).forEach((key) => {
@@ -35,7 +35,7 @@ export abstract class EntitySync {
     return modelStatus;
   }
 
-  private _getDirty(): ModelDirty | undefined {
+  private getDirty(): ModelDirty | undefined {
     const currentStatus = this._createStatus(this.model);
 
     const modelDirty: ModelDirty = {};

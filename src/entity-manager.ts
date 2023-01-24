@@ -1,87 +1,101 @@
 import { Optional } from '@xofttion/utils';
+import { from, firstValueFrom, zip } from 'rxjs';
+import { map, tap } from 'rxjs/operators';
 import { EntityDataSource } from './datasource';
 import { Entity } from './entity';
-import { ModelORM } from './model-orm';
+import { BaseModelORM } from './model-orm';
 import { EntityLink, EntitySync } from './unit-of-work';
 
 export class EntityManager {
-  private _relations: Map<string, ModelORM>;
+  private relations: Map<string, BaseModelORM>;
 
-  private _links: EntityLink[] = [];
+  private links: EntityLink[] = [];
 
-  private _syncs: EntitySync[] = [];
+  private syncs: EntitySync[] = [];
 
-  private _destroys: ModelORM[] = [];
+  private destroys: BaseModelORM[] = [];
 
-  constructor(private _entityDataSource: EntityDataSource) {
-    this._relations = new Map<string, ModelORM>();
+  constructor(private dataSource: EntityDataSource) {
+    this.relations = new Map<string, BaseModelORM>();
   }
 
   public persist(link: EntityLink): void {
-    this._links.push(link);
+    this.links.push(link);
   }
 
   public sync(sync: EntitySync): void {
-    this._syncs.push(sync);
+    this.syncs.push(sync);
 
     this.relation(sync.entity, sync.model);
   }
 
   public destroy(entity: Entity): void {
-    const optional = this.select(entity);
-
-    if (optional.isPresent()) {
-      this._destroys.push(optional.get());
-    }
+    this.select(entity).present((model) => {
+      this.destroys.push(model);
+    });
   }
 
-  public relation(entity: Entity, model: ModelORM): void {
-    this._relations.set(entity.uuid, model);
+  public relation(entity: Entity, model: BaseModelORM): void {
+    this.relations.set(entity.uuid, model);
   }
 
-  public select(entity: Entity): Optional<ModelORM> {
-    return Optional.build(this._relations.get(entity.uuid));
+  public select(entity: Entity): Optional<BaseModelORM> {
+    return Optional.build(this.relations.get(entity.uuid));
   }
 
-  public async flush(): Promise<void> {
-    await this._persistAll();
-    await this._syncAll();
-    await this._destroyAll();
-
-    this.dispose(); // Reboot
+  public flush(): Promise<void[]> {
+    return firstValueFrom(
+      zip(this.persistAll(), this.syncAll(), this.destroyAll()).pipe(
+        tap(() => {
+          this.dispose();
+        })
+      )
+    );
   }
 
   public dispose(): void {
-    this._relations.clear();
+    this.relations.clear();
 
-    this._links = [];
-    this._syncs = [];
-    this._destroys = [];
+    this.links = [];
+    this.syncs = [];
+    this.destroys = [];
   }
 
-  private async _persistAll(): Promise<void> {
-    for (const link of this._links) {
-      const model = link.createModel(this);
+  private persistAll(): Promise<void> {
+    return firstValueFrom(
+      from(this.links).pipe(
+        map((link) => {
+          const model = link.createModel(this);
 
-      await this._entityDataSource.insert(model);
-
-      this.relation(link.entity, model);
-    }
+          this.dataSource.insert(model).then(() => {
+            this.relation(link.entity, model);
+          });
+        })
+      )
+    );
   }
 
-  private async _syncAll(): Promise<void> {
-    for (const sync of this._syncs) {
-      const dirty = sync.verify();
+  private syncAll(): Promise<void> {
+    return firstValueFrom(
+      from(this.syncs).pipe(
+        map((sync) => {
+          const dirty = sync.verify();
 
-      if (dirty) {
-        await this._entityDataSource.update(sync.model, dirty);
-      }
-    }
+          if (dirty) {
+            this.dataSource.update(sync.model, dirty);
+          }
+        })
+      )
+    );
   }
 
-  private async _destroyAll(): Promise<void> {
-    for (const modelDestroy of this._destroys) {
-      await this._entityDataSource.delete(modelDestroy);
-    }
+  private destroyAll(): Promise<void> {
+    return firstValueFrom(
+      from(this.destroys).pipe(
+        map((destroy) => {
+          this.dataSource.delete(destroy);
+        })
+      )
+    );
   }
 }
