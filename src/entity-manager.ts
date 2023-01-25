@@ -1,6 +1,4 @@
 import { Optional } from '@xofttion/utils';
-import { from, firstValueFrom, zip } from 'rxjs';
-import { map, tap } from 'rxjs/operators';
 import { EntityDataSource } from './datasource';
 import { Entity } from './entity';
 import { BaseModelORM } from './model-orm';
@@ -43,14 +41,12 @@ export class EntityManager {
     return Optional.build(this.relations.get(entity.uuid));
   }
 
-  public flush(): Promise<void[]> {
-    return firstValueFrom(
-      zip(this.persistAll(), this.syncAll(), this.destroyAll()).pipe(
-        tap(() => {
-          this.dispose();
-        })
-      )
-    );
+  public async flush(): Promise<void> {
+    await this.persistAll();
+    await this.syncAll();
+    await this.destroyAll();
+
+    this.dispose();
   }
 
   public dispose(): void {
@@ -61,41 +57,29 @@ export class EntityManager {
     this.destroys = [];
   }
 
-  private persistAll(): Promise<void> {
-    return firstValueFrom(
-      from(this.links).pipe(
-        map((link) => {
-          const model = link.createModel(this);
+  private async persistAll(): Promise<void> {
+    for (const link of this.links) {
+      const model = link.createModel(this);
 
-          this.dataSource.insert(model).then(() => {
-            this.relation(link.entity, model);
-          });
-        })
-      )
-    );
+      await this.dataSource.insert(model);
+
+      this.relation(link.entity, model);
+    }
   }
 
-  private syncAll(): Promise<void> {
-    return firstValueFrom(
-      from(this.syncs).pipe(
-        map((sync) => {
-          const dirty = sync.verify();
+  private async syncAll(): Promise<void> {
+    for (const sync of this.syncs) {
+      const dirty = sync.verify();
 
-          if (dirty) {
-            this.dataSource.update(sync.model, dirty);
-          }
-        })
-      )
-    );
+      if (dirty) {
+        await this.dataSource.update(sync.model, dirty);
+      }
+    }
   }
 
-  private destroyAll(): Promise<void> {
-    return firstValueFrom(
-      from(this.destroys).pipe(
-        map((destroy) => {
-          this.dataSource.delete(destroy);
-        })
-      )
-    );
+  private async destroyAll(): Promise<void> {
+    for (const destroy of this.destroys) {
+      await this.dataSource.delete(destroy);
+    }
   }
 }
