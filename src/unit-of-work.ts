@@ -1,20 +1,24 @@
 import { EntityManager } from './entity-manager';
 import { Entity } from './entity';
-import { BaseModelORM } from './model-orm';
+import { BaseModel, ModelUpdated } from './model';
+
+function isUpdated(model: any): model is ModelUpdated {
+  return 'updatedAt' in model;
+}
 
 export type ModelDirty = { [key: string]: any };
 
 export abstract class EntityLink {
   constructor(public readonly entity: Entity) {}
 
-  public abstract createModel(manager: EntityManager): BaseModelORM;
+  public abstract createModel(manager: EntityManager): BaseModel;
 }
 
 export abstract class EntitySync {
-  private _firstStatus: ModelDirty;
+  private firstStatus: ModelDirty;
 
-  constructor(public readonly entity: Entity, public readonly model: BaseModelORM) {
-    this._firstStatus = this._createStatus(model);
+  constructor(public readonly entity: Entity, public readonly model: BaseModel) {
+    this.firstStatus = this.mapModel(model);
   }
 
   public abstract sync(): void;
@@ -25,31 +29,35 @@ export abstract class EntitySync {
     return this.getDirty();
   }
 
-  private _createStatus(model: BaseModelORM): ModelDirty {
-    const modelStatus: ModelDirty = {};
+  private mapModel(model: BaseModel): ModelDirty {
+    const dirty: ModelDirty = {};
 
     Object.keys(model).forEach((key) => {
-      modelStatus[key] = (model as any)[key];
+      dirty[key] = (model as any)[key];
     });
 
-    return modelStatus;
+    return dirty;
   }
 
   private getDirty(): ModelDirty | undefined {
-    const currentStatus = this._createStatus(this.model);
+    const currentStatus = this.mapModel(this.model);
 
-    const modelDirty: ModelDirty = {};
+    const dirty: ModelDirty = {};
 
-    let dirty = false;
+    let isDirty = false;
 
     Object.keys(currentStatus).forEach((key) => {
-      if (currentStatus[key] !== this._firstStatus[key]) {
-        dirty = true;
-        modelDirty[key] = currentStatus[key];
+      if (currentStatus[key] !== this.firstStatus[key]) {
+        isDirty = true;
+        dirty[key] = currentStatus[key];
       }
     });
 
-    return dirty ? modelDirty : undefined;
+    if (isUpdated(this.model)) {
+      dirty['updatedAt'] = new Date();
+    }
+
+    return isDirty ? dirty : undefined;
   }
 }
 
