@@ -62,5 +62,7 @@ export abstract class EntitySync {
 }
 
 export interface UnitOfWork {
-  flush(): Promise<void>;
+  flush(): Promise<unknown[]>;
+
+  flushAsync(): Promise<void>;
 }
