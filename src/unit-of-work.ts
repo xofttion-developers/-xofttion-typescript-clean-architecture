@@ -42,22 +42,22 @@ export abstract class EntitySync {
   private getDirty(): ModelDirty | undefined {
     const currentStatus = this.mapModel(this.model);
 
-    const dirty: ModelDirty = {};
+    const modelDirty: ModelDirty = {};
 
-    let isDirty = false;
+    let dirty = false;
 
     Object.keys(currentStatus).forEach((key) => {
       if (currentStatus[key] !== this.firstStatus[key]) {
-        isDirty = true;
-        dirty[key] = currentStatus[key];
+        dirty = true;
+        modelDirty[key] = currentStatus[key];
       }
     });
 
     if (isUpdated(this.model)) {
-      dirty['updatedAt'] = new Date();
+      modelDirty['updatedAt'] = new Date();
     }
 
-    return isDirty ? dirty : undefined;
+    return dirty ? modelDirty : undefined;
   }
 }
 

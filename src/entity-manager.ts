@@ -1,8 +1,13 @@
-import { Optional } from '@xofttion/utils';
+import { Optional, promisesZip } from '@xofttion/utils';
 import { EntityDataSource } from './datasource';
 import { Entity } from './entity';
 import { BaseModel, ModelHidden } from './model';
-import { EntityLink, EntitySync } from './unit-of-work';
+import { EntityLink, EntitySync, ModelDirty } from './unit-of-work';
+
+type SyncPromise = {
+  model: BaseModel;
+  dirty: ModelDirty;
+};
 
 export class EntityManager {
   private relations: Map<string, BaseModel>;
@@ -43,11 +48,22 @@ export class EntityManager {
     return Optional.build(this.relations.get(entity.uuid));
   }
 
-  public async flush(): Promise<void> {
+  public flush(): Promise<unknown[]> {
+    return promisesZip([
+      () => this.persistAll(),
+      () => this.syncAll(),
+      () => this.hiddenAll(),
+      () => this.destroyAll()
+    ]).finally(() => {
+      this.dispose();
+    });
+  }
+
+  public async flushAsync(): Promise<void> {
     await this.persistAll();
     await this.syncAll();
-    await this.destroyAll();
     await this.hiddenAll();
+    await this.destroyAll();
 
     this.dispose();
   }
@@ -61,38 +77,43 @@ export class EntityManager {
     this.hiddens = [];
   }
 
-  private async persistAll(): Promise<void> {
-    for (const link of this.links) {
-      const model = link.createModel(this);
+  private persistAll(): Promise<void[]> {
+    return Promise.all(
+      this.links.map((link) => {
+        const model = link.createModel(this);
 
-      await this.dataSource.insert(model);
+        this.relation(link.entity, model);
 
-      this.relation(link.entity, model);
-    }
+        return this.dataSource.insert(model);
+      })
+    );
   }
 
-  private async syncAll(): Promise<void> {
-    for (const sync of this.syncs) {
-      if (!this.destroys.includes(sync.model)) {
-        const dirty = sync.verify();
+  private syncAll(): Promise<void[]> {
+    return Promise.all(
+      this.syncs
+        .filter((sync) => !this.destroys.includes(sync.model))
+        .reduce((syncs, sync) => {
+          const dirty = sync.verify();
 
-        if (dirty) {
-          await this.dataSource.update(sync.model, dirty);
-        }
-      }
-    }
+          if (dirty) {
+            syncs.push({ model: sync.model, dirty });
+          }
+
+          return syncs;
+        }, [] as SyncPromise[])
+        .map(({ model, dirty }) => this.dataSource.update(model, dirty))
+    );
   }
 
-  private async destroyAll(): Promise<void> {
-    for (const destroy of this.destroys) {
-      await this.dataSource.delete(destroy);
-    }
+  private destroyAll(): Promise<void[]> {
+    return Promise.all(
+      this.destroys.map((destroy) => this.dataSource.delete(destroy))
+    );
   }
 
-  private async hiddenAll(): Promise<void> {
-    for (const hidden of this.hiddens) {
-      await this.dataSource.hidden(hidden);
-    }
+  private hiddenAll(): Promise<void[]> {
+    return Promise.all(this.hiddens.map((hidden) => this.dataSource.hidden(hidden)));
   }
 }
 
