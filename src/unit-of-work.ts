@@ -2,10 +2,6 @@ import { EntityManager } from './entity-manager';
 import { Entity } from './entity';
 import { BaseModel, ModelUpdated } from './model';
 
-function isUpdated(model: any): model is ModelUpdated {
-  return 'updatedAt' in model;
-}
-
 export type ModelDirty = { [key: string]: any };
 
 export abstract class EntityLink {
@@ -63,4 +59,10 @@ export abstract class EntitySync {
 
 export interface UnitOfWork {
   flush(): Promise<void>;
+
+  flushAsync(): Promise<void>;
+}
+
+function isUpdated(model: any): model is ModelUpdated {
+  return 'updatedAt' in model;
 }

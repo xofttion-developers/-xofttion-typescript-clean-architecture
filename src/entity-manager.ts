@@ -5,8 +5,8 @@ import { BaseModel, ModelHidden } from './model';
 import { EntityLink, EntitySync, ModelDirty } from './unit-of-work';
 
 type SyncPromise = {
-  model: BaseModel;
   dirty: ModelDirty;
+  model: BaseModel;
 };
 
 export class EntityManager {
@@ -48,15 +48,17 @@ export class EntityManager {
     return Optional.build(this.relations.get(entity.uuid));
   }
 
-  public flush(): Promise<unknown[]> {
+  public flush(): Promise<void> {
     return promisesZip([
       () => this.persistAll(),
       () => this.syncAll(),
       () => this.hiddenAll(),
       () => this.destroyAll()
-    ]).finally(() => {
-      this.dispose();
-    });
+    ])
+      .then(() => Promise.resolve())
+      .finally(() => {
+        this.dispose();
+      });
   }
 
   public async flushAsync(): Promise<void> {
