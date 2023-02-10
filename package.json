@@ -16,7 +16,7 @@
     "launch": "ts-node index.ts"
   },
   "peerDependencies": {
-    "@xofttion/utils": "^4.2.1"
+    "@xofttion/utils": "^4.2.4"
   },
   "devDependencies": {
     "@types/jest": "^28.1.8",
