@@ -4,6 +4,9 @@ import { Entity } from './entity';
 import { BaseModel, ModelHidden } from './model';
 import { EntityLink, EntitySync, ModelDirty } from './unit-of-work';
 
+type BaseEntityLink = EntityLink<Entity, BaseModel>;
+type BaseEntitySync = EntitySync<Entity, BaseModel>;
+
 type SyncPromise = {
   dirty: ModelDirty;
   model: BaseModel;
@@ -12,9 +15,9 @@ type SyncPromise = {
 export class EntityManager {
   private relations: Map<string, BaseModel>;
 
-  private links: EntityLink[] = [];
+  private links: BaseEntityLink[] = [];
 
-  private syncs: EntitySync[] = [];
+  private syncs: BaseEntitySync[] = [];
 
   private destroys: BaseModel[] = [];
 
@@ -24,11 +27,11 @@ export class EntityManager {
     this.relations = new Map<string, BaseModel>();
   }
 
-  public persist(link: EntityLink): void {
+  public persist(link: BaseEntityLink): void {
     this.links.push(link);
   }
 
-  public sync(sync: EntitySync): void {
+  public sync(sync: BaseEntitySync): void {
     this.syncs.push(sync);
 
     this.relation(sync.entity, sync.model);

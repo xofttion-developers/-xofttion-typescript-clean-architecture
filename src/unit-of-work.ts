@@ -4,16 +4,16 @@ import { BaseModel, ModelUpdated } from './model';
 
 export type ModelDirty = { [key: string]: any };
 
-export abstract class EntityLink {
-  constructor(public readonly entity: Entity) {}
+export abstract class EntityLink<E extends Entity, M extends BaseModel> {
+  constructor(public readonly entity: E) {}
 
-  public abstract createModel(manager: EntityManager): BaseModel;
+  public abstract createModel(manager: EntityManager): M;
 }
 
-export abstract class EntitySync {
+export abstract class EntitySync<E extends Entity, M extends BaseModel> {
   private firstStatus: ModelDirty;
 
-  constructor(public readonly entity: Entity, public readonly model: BaseModel) {
+  constructor(public readonly entity: E, public readonly model: M) {
     this.firstStatus = this.mapModel(model);
   }
 
@@ -25,7 +25,7 @@ export abstract class EntitySync {
     return this.getDirty();
   }
 
-  private mapModel(model: BaseModel): ModelDirty {
+  private mapModel(model: M): ModelDirty {
     const dirty: ModelDirty = {};
 
     Object.keys(model).forEach((key) => {
