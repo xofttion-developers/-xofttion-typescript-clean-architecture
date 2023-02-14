@@ -1,7 +1,7 @@
 {
   "name": "@xofttion/clean-architecture",
   "type": "commonjs",
-  "version": "4.2.10",
+  "version": "4.2.11",
   "author": "Daniel Andrés Castillo Pedroza",
   "license": "MIT",
   "main": "dist/index.js",
