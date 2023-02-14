@@ -1,8 +1,12 @@
 import { Optional, promisesZip } from '@xofttion/utils';
 import { EntityDataSource } from './datasource';
 import { Entity } from './entity';
+import { EntityLink } from './entity-link';
+import { EntitySync, ModelDirty } from './entity-sync';
 import { BaseModel, ModelHidden } from './model';
-import { EntityLink, EntitySync, ModelDirty } from './unit-of-work';
+
+type BaseEntityLink = EntityLink<Entity, BaseModel>;
+type BaseEntitySync = EntitySync<Entity, BaseModel>;
 
 type SyncPromise = {
   dirty: ModelDirty;
@@ -12,9 +16,9 @@ type SyncPromise = {
 export class EntityManager {
   private relations: Map<string, BaseModel>;
 
-  private links: EntityLink[] = [];
+  private links: BaseEntityLink[] = [];
 
-  private syncs: EntitySync[] = [];
+  private syncs: BaseEntitySync[] = [];
 
   private destroys: BaseModel[] = [];
 
@@ -24,11 +28,11 @@ export class EntityManager {
     this.relations = new Map<string, BaseModel>();
   }
 
-  public persist(link: EntityLink): void {
+  public persist(link: BaseEntityLink): void {
     this.links.push(link);
   }
 
-  public sync(sync: EntitySync): void {
+  public sync(sync: BaseEntitySync): void {
     this.syncs.push(sync);
 
     this.relation(sync.entity, sync.model);
@@ -44,8 +48,12 @@ export class EntityManager {
     this.relations.set(entity.uuid, model);
   }
 
-  public select(entity: Entity): Optional<BaseModel> {
-    return Optional.build(this.relations.get(entity.uuid));
+  public select<T extends BaseModel>(entity: Entity): Optional<T> {
+    return Optional.build(
+      this.relations.has(entity.uuid)
+        ? (this.relations.get(entity.uuid) as T)
+        : undefined
+    );
   }
 
   public flush(): Promise<void> {

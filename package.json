@@ -1,7 +1,7 @@
 {
   "name": "@xofttion/clean-architecture",
   "type": "commonjs",
-  "version": "4.2.8",
+  "version": "4.2.10",
   "author": "Daniel Andrés Castillo Pedroza",
   "license": "MIT",
   "main": "dist/index.js",
@@ -16,7 +16,7 @@
     "launch": "ts-node index.ts"
   },
   "peerDependencies": {
-    "@xofttion/utils": "^4.2.1"
+    "@xofttion/utils": "^4.2.4"
   },
   "devDependencies": {
     "@types/jest": "^28.1.8",

@@ -1,5 +1,5 @@
+import { ModelDirty } from './entity-sync';
 import { BaseModel, ModelHidden } from './model';
-import { ModelDirty } from './unit-of-work';
 
 export interface EntityDataSource {
   insert(model: BaseModel): Promise<void>;

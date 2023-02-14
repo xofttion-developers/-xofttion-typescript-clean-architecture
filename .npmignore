@@ -7,6 +7,7 @@ test
 .eslintignore
 .eslintrc.json
 .gitignore
+.npmrc
 .prettierrc
 .prettierrcignore
 package-lock.json
