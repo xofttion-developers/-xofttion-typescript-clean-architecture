@@ -1,8 +1,9 @@
 import { Optional, promisesZip } from '@xofttion/utils';
 import { EntityDataSource } from './datasource';
 import { Entity } from './entity';
+import { EntityLink } from './entity-link';
+import { EntitySync, ModelDirty } from './entity-sync';
 import { BaseModel, ModelHidden } from './model';
-import { EntityLink, EntitySync, ModelDirty } from './unit-of-work';
 
 type BaseEntityLink = EntityLink<Entity, BaseModel>;
 type BaseEntitySync = EntitySync<Entity, BaseModel>;
@@ -47,8 +48,12 @@ export class EntityManager {
     this.relations.set(entity.uuid, model);
   }
 
-  public select(entity: Entity): Optional<BaseModel> {
-    return Optional.build(this.relations.get(entity.uuid));
+  public select<T extends BaseModel>(entity: Entity): Optional<T> {
+    return Optional.build(
+      this.relations.has(entity.uuid)
+        ? (this.relations.get(entity.uuid) as T)
+        : undefined
+    );
   }
 
   public flush(): Promise<void> {
