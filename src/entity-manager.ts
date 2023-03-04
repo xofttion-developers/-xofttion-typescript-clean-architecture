@@ -42,7 +42,7 @@ export class XofttionEntityManager implements EntityManager {
 
   private hiddens: ModelHidden[] = [];
 
-  constructor(private dataSource: EntityDataSource) {
+  constructor(private source: EntityDataSource) {
     this.relations = new Map<string, BaseModel>();
   }
 
@@ -108,11 +108,15 @@ export class XofttionEntityManager implements EntityManager {
   private persistAll(): Promise<void[]> {
     return Promise.all(
       this.links.map((link) => {
-        const model = link.createModel(this);
+        const result = link.createModel(this);
 
-        this.relation(link.entity, model);
+        return (result instanceof Promise ? result : Promise.resolve(result)).then(
+          (model) => {
+            this.relation(link.entity, model);
 
-        return this.dataSource.insert(model);
+            return this.source.insert(model);
+          }
+        );
       })
     );
   }
@@ -130,18 +134,16 @@ export class XofttionEntityManager implements EntityManager {
 
           return syncs;
         }, [] as SyncPromise[])
-        .map(({ model, dirty }) => this.dataSource.update(model, dirty))
+        .map(({ model, dirty }) => this.source.update(model, dirty))
     );
   }
 
   private destroyAll(): Promise<void[]> {
-    return Promise.all(
-      this.destroys.map((destroy) => this.dataSource.delete(destroy))
-    );
+    return Promise.all(this.destroys.map((destroy) => this.source.delete(destroy)));
   }
 
   private hiddenAll(): Promise<void[]> {
-    return Promise.all(this.hiddens.map((hidden) => this.dataSource.hidden(hidden)));
+    return Promise.all(this.hiddens.map((hidden) => this.source.hidden(hidden)));
   }
 }
 
