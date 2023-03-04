@@ -6,4 +6,4 @@ export * from './entity-sync';
 export * from './entity';
 export * from './model';
 export * from './repository';
-export * from './unit-of-work';
+export * from './workspace';
