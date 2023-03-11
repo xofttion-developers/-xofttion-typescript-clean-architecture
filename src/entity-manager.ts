@@ -13,22 +13,22 @@ type SyncPromise = {
   model: BaseModel;
 };
 
-export interface EntityManager {
-  persist(link: BaseEntityLink): void;
+export abstract class EntityManager {
+  abstract persist(link: BaseEntityLink): void;
 
-  sync(sync: BaseEntitySync): void;
+  abstract sync(sync: BaseEntitySync): void;
 
-  destroy(entity: Entity): void;
+  abstract destroy(entity: Entity): void;
 
-  relation(entity: Entity, model: BaseModel): void;
+  abstract relation(entity: Entity, model: BaseModel): void;
 
-  select<T extends BaseModel>(entity: Entity): Optional<T>;
+  abstract select<T extends BaseModel>(entity: Entity): Optional<T>;
 
-  flush(): Promise<void>;
+  abstract flush(): Promise<void>;
 
-  flushAsync(): Promise<void>;
+  abstract flushAsync(): Promise<void>;
 
-  dispose(): void;
+  abstract dispose(): void;
 }
 
 export class XofttionEntityManager implements EntityManager {
