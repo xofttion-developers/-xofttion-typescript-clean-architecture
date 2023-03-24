@@ -5,5 +5,5 @@ export * from './entity-manager';
 export * from './entity-sync';
 export * from './entity';
 export * from './model';
+export * from './persistent-unit';
 export * from './repository';
-export * from './workspace';

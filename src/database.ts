@@ -1,11 +1,11 @@
-export interface EntityDatabase {
-  connect(): Promise<void>;
+export abstract class EntityDatabase {
+  abstract connect(): Promise<void>;
 
-  disconnect(full?: boolean): Promise<void>;
+  abstract disconnect(full?: boolean): Promise<void>;
 
-  transaction(): Promise<void>;
+  abstract transaction(): Promise<void>;
 
-  commit(): Promise<void>;
+  abstract commit(): Promise<void>;
 
-  rollback(): Promise<void>;
+  abstract rollback(): Promise<void>;
 }

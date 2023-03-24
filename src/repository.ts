@@ -1,12 +1,12 @@
 import { Optional } from '@xofttion/utils';
 import { Entity } from './entity';
 
-export interface Repository<T extends Entity> {
-  persist(entity: T): Promise<void>;
+export abstract class Repository<T extends Entity> {
+  abstract persist(entity: T): Promise<void>;
 
-  findByUuid(uuid: string): Promise<Optional<T>>;
+  abstract findByUuid(uuid: string): Promise<Optional<T>>;
 
-  findAll(): Promise<T[]>;
+  abstract findAll(): Promise<T[]>;
 
-  destroy(entity: T): Promise<void>;
+  abstract destroy(entity: T): Promise<void>;
 }
