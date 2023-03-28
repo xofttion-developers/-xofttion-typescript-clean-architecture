@@ -6,7 +6,11 @@ export type ModelDirty = { [key: string]: any };
 export abstract class EntitySync<E extends Entity, M extends BaseModel> {
   private firstStatus: ModelDirty;
 
-  constructor(public readonly entity: E, public readonly model: M) {
+  constructor(
+    public readonly entity: E,
+    public readonly model: M,
+    public readonly bindable = true
+  ) {
     this.firstStatus = this.mapModel(model);
   }
 
