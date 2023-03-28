@@ -51,9 +51,11 @@ export class XofttionEntityManager implements EntityManager {
   }
 
   public sync(sync: BaseEntitySync): void {
-    this.syncs.push(sync);
+    if (sync.bindable) {
+      this.relation(sync.entity, sync.model);
+    }
 
-    this.relation(sync.entity, sync.model);
+    this.syncs.push(sync);
   }
 
   public destroy(entity: Entity): void {
@@ -112,7 +114,9 @@ export class XofttionEntityManager implements EntityManager {
 
         return (result instanceof Promise ? result : Promise.resolve(result)).then(
           (model) => {
-            this.relation(link.entity, model);
+            if (link.bindable) {
+              this.relation(link.entity, model);
+            }
 
             return this.source.insert(model);
           }
