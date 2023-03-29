@@ -3,6 +3,7 @@ import { EntityDataSource } from './datasource';
 import { Entity } from './entity';
 import { EntityLink } from './entity-link';
 import { EntitySync, ModelDirty } from './entity-sync';
+import { Procedure } from './procedure';
 import { BaseModel, ModelHidden } from './model';
 
 type BaseEntityLink = EntityLink<Entity, BaseModel>;
@@ -19,6 +20,8 @@ export abstract class EntityManager {
   abstract sync(sync: BaseEntitySync): void;
 
   abstract destroy(entity: Entity): void;
+
+  abstract procedure(procedure: Procedure): void;
 
   abstract relation(entity: Entity, model: BaseModel): void;
 
@@ -42,6 +45,8 @@ export class XofttionEntityManager implements EntityManager {
 
   private hiddens: ModelHidden[] = [];
 
+  private procedures: Procedure[] = [];
+
   constructor(private source: EntityDataSource) {
     this.relations = new Map<string, BaseModel>();
   }
@@ -64,6 +69,10 @@ export class XofttionEntityManager implements EntityManager {
     });
   }
 
+  public procedure(procedure: Procedure): void {
+    this.procedures.push(procedure);
+  }
+
   public relation(entity: Entity, model: BaseModel): void {
     this.relations.set(entity.uuid, model);
   }
@@ -81,7 +90,8 @@ export class XofttionEntityManager implements EntityManager {
       () => this.persistAll(),
       () => this.syncAll(),
       () => this.hiddenAll(),
-      () => this.destroyAll()
+      () => this.destroyAll(),
+      () => this.procedureAll()
     ])
       .then(() => Promise.resolve())
       .finally(() => {
@@ -94,6 +104,7 @@ export class XofttionEntityManager implements EntityManager {
     await this.syncAll();
     await this.hiddenAll();
     await this.destroyAll();
+    await this.procedureAll();
 
     this.dispose();
   }
@@ -105,6 +116,7 @@ export class XofttionEntityManager implements EntityManager {
     this.syncs = [];
     this.destroys = [];
     this.hiddens = [];
+    this.procedures = [];
   }
 
   private persistAll(): Promise<void[]> {
@@ -148,6 +160,12 @@ export class XofttionEntityManager implements EntityManager {
 
   private hiddenAll(): Promise<void[]> {
     return Promise.all(this.hiddens.map((hidden) => this.source.hidden(hidden)));
+  }
+
+  private procedureAll(): Promise<void[]> {
+    return Promise.all(
+      this.procedures.map((procedure) => this.source.procedure(procedure))
+    );
   }
 }
 
