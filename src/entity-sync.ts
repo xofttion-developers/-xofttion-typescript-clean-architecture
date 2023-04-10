@@ -32,7 +32,7 @@ export abstract class EntitySync<E extends Entity, M extends BaseModel> {
     return dirty;
   }
 
-  private getDirty(): ModelDirty | undefined {
+  private getDirty(): Undefined<ModelDirty> {
     const currentStatus = this.mapModel(this.model);
 
     const modelDirty: ModelDirty = {};
