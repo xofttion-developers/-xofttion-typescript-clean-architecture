@@ -1,0 +1,13 @@
+# Folders
+.github
+node_modules
+test
+
+# Files
+.eslintignore
+.eslintrc.json
+.gitignore
+.npmrc
+.prettierrc
+.prettierrcignore
+package-lock.json

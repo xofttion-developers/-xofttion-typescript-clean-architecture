@@ -8,10 +8,9 @@
   "typings": "index.d.ts",
   "module": "xofttion-clean-architecture.esm.js",
   "scripts": {
-    "publish": "npm run build && cd artifact && npm publish",
     "build": "tsc -p tsconfig.json",
     "test": "jest",
-    "main": "ts-node index.ts"
+    "launch": "ts-node index.ts"
   },
   "peerDependencies": {
     "@xofttion/utils": "^4.9.9"
