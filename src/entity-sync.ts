@@ -16,7 +16,7 @@ export abstract class EntitySync<E extends Entity, M extends BaseModel> {
 
   public abstract sync(): void;
 
-  public verify(): ModelDirty | undefined {
+  public verify(): Undefined<ModelDirty> {
     this.sync();
 
     return this.getDirty();
