@@ -3,6 +3,7 @@ export * from './datasource';
 export * from './entity-link';
 export * from './entity-manager';
 export * from './entity-sync';
+export * from './entity-update';
 export * from './entity';
 export * from './model';
 export * from './persistent-unit';

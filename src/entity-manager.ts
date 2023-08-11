@@ -1,12 +1,14 @@
 import { Optional, promisesZip } from '@xofttion/utils';
 import { EntityDataSource } from './datasource';
-import { Entity } from './entity';
 import { EntityLink } from './entity-link';
 import { EntitySync, ModelDirty } from './entity-sync';
-import { Procedure } from './procedure';
+import { EntityUpdate } from './entity-update';
+import { Entity } from './entity';
 import { BaseModel, ModelHidden } from './model';
+import { Procedure } from './procedure';
 
 type BaseEntityLink = EntityLink<Entity, BaseModel>;
+type BaseEntityUpdate = EntityUpdate<Entity, BaseModel>;
 type BaseEntitySync = EntitySync<Entity, BaseModel>;
 
 type SyncPromise = {
@@ -16,6 +18,8 @@ type SyncPromise = {
 
 export abstract class EntityManager {
   abstract persist(link: BaseEntityLink): void;
+
+  abstract update(update: BaseEntityUpdate): void;
 
   abstract sync(sync: BaseEntitySync): void;
 
@@ -39,6 +43,8 @@ export class XofttionEntityManager implements EntityManager {
 
   private links: BaseEntityLink[] = [];
 
+  private updates: BaseEntityUpdate[] = [];
+
   private syncs: BaseEntitySync[] = [];
 
   private destroys: BaseModel[] = [];
@@ -55,9 +61,21 @@ export class XofttionEntityManager implements EntityManager {
     this.links.push(link);
   }
 
+  public update(update: BaseEntityUpdate): void {
+    const { bindable, entity, model } = update;
+
+    if (bindable) {
+      this.relation(entity, model);
+    }
+
+    this.updates.push(update);
+  }
+
   public sync(sync: BaseEntitySync): void {
-    if (sync.bindable) {
-      this.relation(sync.entity, sync.model);
+    const { bindable, entity, model } = sync;
+
+    if (bindable) {
+      this.relation(entity, model);
     }
 
     this.syncs.push(sync);
@@ -73,21 +91,20 @@ export class XofttionEntityManager implements EntityManager {
     this.procedures.push(procedure);
   }
 
-  public relation(entity: Entity, model: BaseModel): void {
-    this.relations.set(entity.uuid, model);
+  public relation({ uuid }: Entity, model: BaseModel): void {
+    this.relations.set(uuid, model);
   }
 
-  public select<T extends BaseModel>(entity: Entity): Optional<T> {
+  public select<T extends BaseModel>({ uuid }: Entity): Optional<T> {
     return Optional.build(
-      this.relations.has(entity.uuid)
-        ? (this.relations.get(entity.uuid) as T)
-        : undefined
+      this.relations.has(uuid) ? (this.relations.get(uuid) as T) : undefined
     );
   }
 
   public flush(): Promise<void> {
     return promisesZip([
       () => this.persistAll(),
+      () => this.updateAll(),
       () => this.syncAll(),
       () => this.hiddenAll(),
       () => this.destroyAll(),
@@ -101,6 +118,7 @@ export class XofttionEntityManager implements EntityManager {
 
   public async flushAsync(): Promise<void> {
     await this.persistAll();
+    await this.updateAll();
     await this.syncAll();
     await this.hiddenAll();
     await this.destroyAll();
@@ -113,6 +131,7 @@ export class XofttionEntityManager implements EntityManager {
     this.relations.clear();
 
     this.links = [];
+    this.updates = [];
     this.syncs = [];
     this.destroys = [];
     this.hiddens = [];
@@ -126,8 +145,10 @@ export class XofttionEntityManager implements EntityManager {
 
         return (result instanceof Promise ? result : Promise.resolve(result)).then(
           (model) => {
-            if (link.bindable) {
-              this.relation(link.entity, model);
+            const { bindable, entity } = link;
+
+            if (bindable) {
+              this.relation(entity, model);
             }
 
             return this.source.insert(model);
@@ -137,11 +158,15 @@ export class XofttionEntityManager implements EntityManager {
     );
   }
 
+  private updateAll(): Promise<void[]> {
+    return Promise.all(this.updates.map(({ model }) => this.source.update(model)));
+  }
+
   private syncAll(): Promise<void[]> {
     return Promise.all(
       this.syncs
-        .filter((sync) => !this.destroys.includes(sync.model))
-        .reduce((syncs, sync) => {
+        .filter(({ model }) => !this.destroys.includes(model))
+        .reduce((syncs: SyncPromise[], sync) => {
           const dirty = sync.verify();
 
           if (dirty) {
@@ -149,7 +174,7 @@ export class XofttionEntityManager implements EntityManager {
           }
 
           return syncs;
-        }, [] as SyncPromise[])
+        }, [])
         .map(({ model, dirty }) => this.source.update(model, dirty))
     );
   }
