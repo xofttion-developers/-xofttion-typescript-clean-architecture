@@ -5,7 +5,7 @@ import { BaseModel, ModelHidden } from './model';
 export abstract class EntityDataSource {
   abstract insert(model: BaseModel): Promise<void>;
 
-  abstract update(model: BaseModel, dirty: ModelDirty): Promise<void>;
+  abstract update(model: BaseModel, dirty?: ModelDirty): Promise<void>;
 
   abstract delete(model: BaseModel): Promise<void>;
 
